@@ -513,17 +513,24 @@ const OrderListView: React.FC<Props> = ({
       o.productName,
       o.sector,
       o.subSector || '',
-      o.quantity,
+      `${o.quantity} ${o.unit}`,
       new Date(o.deadline).toLocaleDateString('pt-BR'),
       o.status
     ]);
-    const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    
+    // Properly quote fields and use semicolon as delimiter for better Excel compatibility in Brazil
+    const csvContent = [
+      headers.join(';'), 
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', `ordens_so_aco_${new Date().getTime()}.csv`);
     link.click();
+    URL.revokeObjectURL(url);
   };
 
   const getStatusStyle = (status: OrderStatus) => {

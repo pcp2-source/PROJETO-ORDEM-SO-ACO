@@ -363,6 +363,44 @@ const EngineeringRegistryView: React.FC<Props> = ({
     printWindow.document.close();
   };
 
+  const handleExportExcel = () => {
+    if (library.length === 0) {
+      alert("Biblioteca vazia.");
+      return;
+    }
+
+    const masterProductName = library.length > 0 ? library[0].masterProduct : (masterProduct || 'GERAL');
+    const headers = ['Produto Master', 'Cod. Peca', 'Descricao', 'Material', 'Especificacao', 'Quantidade', 'Peso Unitario (KG)', 'Peso Total (KG)'];
+    
+    const rows = library.map(item => [
+      item.masterProduct,
+      item.partCode,
+      item.description,
+      item.materialName,
+      item.dimensions.replace(/;/g, ','), // Evitar conflito com delimitador
+      item.quantity,
+      item.unitWeight.toFixed(3),
+      item.totalWeight.toFixed(2)
+    ]);
+
+    // Usar ponto e vírgula como delimitador para compatibilidade com Excel no Brasil
+    const csvContent = [
+      headers.join(';'),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${masterProductName.toLowerCase().replace(/\s+/g, '_')}_so_aco.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-7xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
       <div className="bg-[#002855] rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-2xl border-b-8 border-[#FFB800]">
@@ -525,6 +563,9 @@ const EngineeringRegistryView: React.FC<Props> = ({
                 <Eraser className="w-4 h-4" /> Limpar Biblioteca
              </button>
              <button onClick={saveToHistory} className="px-6 py-3 bg-[#FFB800] text-[#002855] rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-amber-500 transition-all active:scale-95">Registrar Fechamento</button>
+             <button onClick={handleExportExcel} className="px-6 py-3 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-emerald-700 transition-all active:scale-95 flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4" /> XLS Excel
+             </button>
              <button onClick={handlePrintLibrary} className="px-6 py-3 bg-[#002855] text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg hover:bg-[#001a35] transition-all active:scale-95">Gerar PDF</button>
           </div>
         </div>

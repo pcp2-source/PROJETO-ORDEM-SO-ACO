@@ -321,8 +321,8 @@ const WeightCalculatorView: React.FC<Props> = ({
     ]);
 
     const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.join(','))
+      headers.join(';'),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(';'))
     ].join('\n');
 
     const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
